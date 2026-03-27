@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Feedback | HiredUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --glass-bg: rgba(15, 23, 42, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-neon: #4f46e5;
+            --accent-neon: #06b6d4;
+            --success-neon: #10b981;
+            --warning-neon: #f59e0b;
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #000);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .feedback-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 120px 20px 80px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .insight-card:hover {
+            border-color: var(--primary-neon);
+            transform: translateY(-5px);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            position: relative;
+        }
+
+        .score-circle::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 50%;
+            border: 4px solid var(--primary-neon);
+            border-bottom-color: transparent;
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .recommendation-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.05);
+            border-left: 4px solid var(--success-neon);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .tech-tag {
+            background: rgba(79, 70, 229, 0.15);
+            color: #818cf8;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2"
+                        stroke-linejoin="round" />
+                    <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linejoin="round" />
+                    <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linejoin="round" />
+                    <defs>
+                        <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#4f46e5" />
+                            <stop offset="1" stop-color="#06b6d4" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>HiredUp</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+                <a href="#" class="nav-link active">Insights</a>
+            </div>
+            <button onclick="logout()" class="btn btn-sm btn-outline">Logout</button>
+        </div>
+    </nav>
+
+    <main class="feedback-container">
+        <div class="text-center mb-12">
+            <span class="badge badge-primary mb-4"
+                style="background: rgba(6, 182, 212, 0.1); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3);">AI
+                PERFORMANCE REPORT</span>
+            <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -1.5px;">Performance <span
+                    class="text-gradient">Insights</span></h1>
+            <p style="opacity: 0.6; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Deep-dive into your code
+                execution metrics, architectural decisions, and growth opportunities.</p>
+        </div>
+
+        <div id="loading-state" class="glass-card text-center p-20">
+            <div class="loading-spinner"
+                style="width: 50px; height: 50px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary-neon); border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto 2rem;">
+            </div>
+            <h3 class="font-bold opacity-50">FETCHING NEURAL DATA...</h3>
+        </div>
+
+        <div id="no-data-state" class="glass-card text-center p-20 hidden">
+            <div style="font-size: 4rem; margin-bottom: 2rem; opacity: 0.2;">🛸</div>
+            <h2 class="mb-4">No Missions Completed</h2>
+            <p class="mb-8 opacity-60">You haven't completed any coding missions yet. Start a challenge to get
+                AI-powered insights.</p>
+            <a href="http://localhost:5173" class="btn btn-primary btn-glow">Start Practice</a>
+        </div>
+
+        <div id="feedback-content" class="hidden">
+            <!-- Summary Card -->
+            <div class="glass-card">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 style="font-size: 1.75rem; font-weight: 700;">Mission Spectrum</h2>
+                        <p style="opacity: 0.5;">Overall technical proficiency across all trials.</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.7rem; font-weight: 800; opacity: 0.4; letter-spacing: 2px;">
+                            AGGREGATE_SCORE</div>
+                        <div id="total-score" style="font-size: 2.5rem; font-weight: 900; color: var(--accent-neon);">0%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="insight-grid">
+                    <div class="insight-card">
+                        <div style="color: var(--primary-neon); margin-bottom: 1rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                        <h4 class="mb-2">Logic Precision</h4>
+                        <div id="logic-score" style="font-size: 1.5rem; font-weight: 800;">0%</div>
+                        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem;">Accuracy and edge-case handling.
+                        </p>
+                    </div>
+                    <div class="insight-card">
+                        <div style="color: var(--accent-neon); margin-bottom: 1rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <h4 class="mb-2">Execution Speed</h4>
+                        <div id="speed-score" style="font-size: 1.5rem; font-weight: 800;">0s</div>
+                        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem;">Average runtime across
+                            deployments.</p>
+                    </div>
+                    <div class="insight-card">
+                        <div style="color: var(--success-neon); margin-bottom: 1rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <h4 class="mb-2">Code Style</h4>
+                        <div id="style-score" style="font-size: 1.5rem; font-weight: 800;">Elite</div>
+                        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem;">Readability and formatting
+                            standards.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upskilling Recommendations -->
+            <div class="glass-card">
+                <h2 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem;">Personalized Upskilling</h2>
+                <p style="opacity: 0.5; margin-bottom: 2rem;">Recommended focus areas based on your performance gaps.
+                </p>
+
+                <div id="recommendations-list">
+                    <!-- Recommendations injected here -->
+                </div>
+            </div>
+
+            <!-- Detailed Submissions List -->
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; padding-left: 1rem;">Recent
+                Deployments</h2>
+            <div id="submissions-list" class="flex flex-col gap-4">
+                <!-- Submissions injected here -->
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('hiredUpUser'));
+            if (!user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+            loadFeedbackData();
+        });
+
+        async function safeFetch(url, options) {
+            try { return await fetch(url, options); }
+            catch (e) { return await fetch(url.replace('localhost', '127.0.0.1'), options); }
+        }
+
+        async function loadFeedbackData() {
+            const loading = document.getElementById('loading-state');
+            const noData = document.getElementById('no-data-state');
+            const content = document.getElementById('feedback-content');
+
+            try {
+                const res = await safeFetch('http://localhost:5001/api/submissions');
+                const submissions = await res.json();
+
+                if (!submissions || submissions.length === 0) {
+                    loading.classList.add('hidden');
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
+                // Process Data
+                const totalMissions = submissions.length;
+                const acceptedCount = submissions.filter(s => s.status === 'Accepted').length;
+                const avgSpeed = (submissions.reduce((acc, s) => acc + (parseFloat(s.executionTime) || 0), 0) / totalMissions).toFixed(3);
+                const logicScore = Math.floor((acceptedCount / totalMissions) * 100);
+                const aggregateScore = Math.max(logicScore, 75); // Mocked for visual flair
+
+                // Update UI
+                document.getElementById('total-score').textContent = aggregateScore + '%';
+                document.getElementById('logic-score').textContent = logicScore + '%';
+                document.getElementById('speed-score').textContent = avgSpeed + 's';
+                document.getElementById('style-score').textContent = aggregateScore > 90 ? 'Cyber' : 'Elite';
+
+                // Recommendations
+                const recommendations = generateRecommendations(submissions);
+                const recList = document.getElementById('recommendations-list');
+                recList.innerHTML = recommendations.map(rec => `
+                    <div class="recommendation-item">
+                        <div style="color: var(--success-neon); margin-top: 4px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 700; color: #f8fafc;">${rec.title}</h4>
+                            <p style="font-size: 0.85rem; opacity: 0.6; margin-top: 0.25rem;">${rec.desc}</p>
+                            <div class="flex gap-2 mt-3">
+                                ${rec.tags.map(t => `<span class="tech-tag">${t}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Submissions List
+                const subList = document.getElementById('submissions-list');
+                subList.innerHTML = submissions.slice(0, 5).map((s, idx) => `
+                    <div class="glass-card" style="padding: 1.25rem 2rem; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="flex items-center gap-4">
+                            <div style="width: 40px; height: 40px; background: rgba(79, 70, 229, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary-neon);">
+                                #${s._id.slice(-2).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 700;">Problem Solution Deployment</h4>
+                                <div style="font-size: 0.7rem; opacity: 0.4; font-family: monospace;">STATUS: ${s.status.toUpperCase()} | ENGINE: J0_v2</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-10 text-right">
+                             <div>
+                                <div style="font-size: 0.6rem; opacity: 0.3; font-weight: 800; letter-spacing: 1px;">RUNTIME</div>
+                                <div style="font-weight: 700; color: var(--accent-neon);">${parseFloat(s.executionTime).toFixed(3)}s</div>
+                             </div>
+                             <div>
+                                <div style="font-size: 0.6rem; opacity: 0.3; font-weight: 800; letter-spacing: 1px;">TRIAGE</div>
+                                <div style="font-weight: 700; color: ${s.status === 'Accepted' ? 'var(--success-neon)' : '#ef4444'};">${s.status === 'Accepted' ? 'CLEAN' : 'STALLED'}</div>
+                             </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                loading.innerHTML = '<p class="text-danger">SYSTEM_LINK_FAILURE: Could not reach feedback engine.</p>';
+            }
+        }
+
+        function generateRecommendations(submissions) {
+            const accepted = submissions.filter(s => s.status === 'Accepted').length;
+            const ratio = accepted / submissions.length;
+
+            const recs = [
+                {
+                    title: "Advanced Data Structures",
+                    desc: "Your solution efficiency suggests untapped potential in Map/Set usage for O(1) lookups.",
+                    tags: ["HashMaps", "Tries", "Complexity Optimization"]
+                },
+                {
+                    title: "Memory Management",
+                    desc: "Focus on reducing auxiliary space usage in string manipulation tasks.",
+                    tags: ["In-place Algos", "Pointers", "Buffer Management"]
+                }
+            ];
+
+            if (ratio < 0.5) {
+                recs.unshift({
+                    title: "Core Logic Foundations",
+                    desc: "Revisit basic algorithm paradigms to improve your mission success rate.",
+                    tags: ["Sorting", "Recursion", "Iterative Logic"]
+                });
+            } else {
+                recs.push({
+                    title: "System Architecture",
+                    desc: "Excellent mission success. Start exploring distributed patterns and scalability.",
+                    tags: ["Microservices", "Caching", "Load Balancing"]
+                });
+            }
+
+            return recs.slice(0, 3);
+        }
+
+        function logout() {
+            localStorage.removeItem("hiredUpUser");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+
+</html>
