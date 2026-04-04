@@ -4,12 +4,16 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
+const { authenticate } = require('../middleware/auth');
+
+// Protect code execution (prevents anonymous spamming)
+router.use(authenticate);
 
 const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions';
 const API_KEY = process.env.RAPIDAPI_KEY;
 
 router.post('/run', async (req, res) => {
-    console.log("Incoming /run request body:", req.body);
+    console.log("🚀 Incoming /run request:", req.body.language_id);
     const { language_id, source_code, stdin, problemId } = req.body;
 
     // Validate that source_code is not empty or just comments
@@ -150,9 +154,10 @@ router.post('/run', async (req, res) => {
                         memory: 'Local'
                     });
                 } catch (err) {
+                    console.error("VM2 Logic Error:", err);
                     return res.json({
                         stdout: "",
-                        stderr: err.toString(),
+                        stderr: "Execution Error: " + err.message,
                         status: { id: 11, description: 'Runtime Error' },
                         time: '0.01',
                         memory: 'Local'
@@ -162,6 +167,14 @@ router.post('/run', async (req, res) => {
 
             // 2. Local Python Execution (71)
             if (langId === 71) {
+                // Check if python is available
+                const pyCheck = await new Promise(r => exec('python --version', err => r(!err)));
+                if (!pyCheck) {
+                    return res.status(500).json({ 
+                        error: "Python Environment Not Found", 
+                        details: "The server does not have Python installed or in its PATH. Please contact the administrator." 
+                    });
+                }
                 if (problem && problem.testCases && problem.testCases.length > 0) {
                     const results = [];
                     for (let i = 0; i < problem.testCases.length; i++) {
@@ -275,6 +288,15 @@ if __name__ == "__main__":
 
             // 3. Local C++ Execution (54)
             if (langId === 54) {
+                // Check if g++ is available
+                const gppCheck = await new Promise(r => exec('g++ --version', err => r(!err)));
+                if (!gppCheck) {
+                    return res.status(500).json({ 
+                        error: "C++ Compiler Not Found", 
+                        details: "The server does not have g++ installed. Please install MinGW or similar." 
+                    });
+                }
+
                 if (problem && problem.testCases && problem.testCases.length > 0) {
                     const baseName = `solution_${Date.now()}`;
                     const cppFile = path.join(tempDir, `${baseName}.cpp`);

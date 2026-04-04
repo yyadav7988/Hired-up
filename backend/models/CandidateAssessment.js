@@ -1,29 +1,26 @@
 const mongoose = require('mongoose');
-
-const candidateAssessmentSchema = new mongoose.Schema({
-  candidateId: { type: mongoose.Schema.Types.ObjectId, ref: 'Candidate', required: true },
-  assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment', required: true },
-  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
-  startedAt: { type: Date, default: Date.now },
-  completedAt: Date,
-  status: { type: String, enum: ['IN_PROGRESS', 'COMPLETED', 'ABANDONED'], default: 'IN_PROGRESS' },
-  rawScore: Number,
-  weightedScore: Number
-});
-
-candidateAssessmentSchema.index({ candidateId: 1, assessmentId: 1, jobId: 1 }, { unique: true });
+const { v4: uuidv4 } = require('uuid');
 
 const answerSchema = new mongoose.Schema({
-  candidateAssessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'CandidateAssessment', required: true },
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
-  response: mongoose.Schema.Types.Mixed,
-  isCorrect: Boolean,
-  pointsEarned: Number,
-  timeSpentSeconds: Number,
-  createdAt: { type: Date, default: Date.now }
-});
+  question_id: { type: String, required: true },
+  response: { type: mongoose.Schema.Types.Mixed },
+  is_correct: { type: Boolean, default: false },
+  points_earned: { type: Number, default: 0 },
+  time_spent_seconds: { type: Number, default: 0 }
+}, { _id: false });
 
-module.exports = {
-  CandidateAssessment: mongoose.model('CandidateAssessment', candidateAssessmentSchema),
-  Answer: mongoose.model('Answer', answerSchema)
-};
+const candidateAssessmentSchema = new mongoose.Schema({
+  _id: { type: String, default: uuidv4 },
+  candidate_id: { type: String, required: true, ref: 'User' },
+  assessment_id: { type: String, required: true, ref: 'Assessment' },
+  job_id: { type: String, required: true, ref: 'Job' },
+  status: { type: String, default: 'IN_PROGRESS' }, // IN_PROGRESS, COMPLETED
+  raw_score: { type: Number, default: 0 },
+  weighted_score: { type: Number, default: 0 },
+  completed_at: { type: Date },
+  answers: [answerSchema]
+}, { timestamps: { createdAt: 'started_at', updatedAt: false } });
+
+candidateAssessmentSchema.virtual('id').get(function() { return this._id; });
+
+module.exports = mongoose.model('CandidateAssessment', candidateAssessmentSchema);

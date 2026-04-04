@@ -1,5 +1,15 @@
-node_modules/
-.env
+# Sensitive Files (Recursive)
+**/.env
+**/.env.*
+!.env.example
+**/node_modules/
+
+# Local/Temporary Files
+out.txt
+file_list.txt
+*.ps1_history
+.gemini/
+.cortex/
 
 # Python
 __pycache__/

@@ -37,17 +37,20 @@ const problemsRouter = require('./routes/problems');
 const codeExecRouter = require('./routes/codeExec');
 const submissionsRouter = require('./routes/submissions');
 const aptitudeRouter = require('./routes/aptitude');
+const certificatesRouter = require('./routes/certificates');
 
 app.use('/api/problems', problemsRouter);
 app.use('/api/execute', codeExecRouter);
 app.use('/api/submissions', submissionsRouter);
 app.use('/api/aptitude', aptitudeRouter);
+app.use('/api/certificates', certificatesRouter);
+app.use('/uploads', express.static('uploads'));
 
 app.get('/', (req, res) => {
     res.send('Live Code Practice API is running');
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://127.0.0.1:${PORT}`);
 });

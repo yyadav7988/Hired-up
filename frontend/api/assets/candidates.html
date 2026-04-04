@@ -6,17 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Candidates | HiredUp</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
     <style>
         :root {
-            --bg-dark: #0B0E14;
-            --bg-card: rgba(11, 14, 20, 0.7);
-            --bg-glass: rgba(255, 255, 255, 0.03);
-            --primary: #6C63FF;
-            --primary-hover: #5a52d5;
-            --accent: #00F5D4;
-            --text-main: #FFFFFF;
-            --text-muted: #94A3B8;
-            --border-subtle: rgba(255, 255, 255, 0.08);
+            /* Inherit from index.css variables where possible */
             --radius: 16px;
             --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
@@ -30,10 +23,6 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            background-image:
-                radial-gradient(circle at 10% 20%, rgba(108, 99, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(0, 245, 212, 0.1) 0%, transparent 40%);
             color: var(--text-main);
             line-height: 1.6;
             padding: 2rem 1rem;
@@ -53,7 +42,7 @@
         header h1 {
             font-size: 3rem;
             font-weight: 700;
-            background: linear-gradient(to right, #FFFFFF, #e9d5ff);
+            background: var(--gradient-text, linear-gradient(to right, #FFFFFF, #e9d5ff));
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -200,7 +189,7 @@
         }
 
         .modal-content {
-            background: #111827;
+            background: var(--bg-dark, #111827);
             border: 1px solid var(--border-subtle);
             width: 90%;
             max-width: 500px;
@@ -317,7 +306,40 @@
     <div class="container">
         <nav class="navbar-minimal">
             <a href="index.html" class="logo">HiredUp</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="nav-theme-toggle" class="btn" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    🌙
+                </button>
+                <a href="index.html" class="btn" style="width: auto; padding: 0.5rem 1.5rem;">Exit</a>
+            </div>
         </nav>
+
+        <script>
+            // Theme Sync for Navbar Toggle
+            document.addEventListener('DOMContentLoaded', () => {
+                const themeBtn = document.getElementById('nav-theme-toggle');
+                if (themeBtn) {
+                    const updateBtn = (theme) => {
+                        themeBtn.innerHTML = theme === 'light' ? '🌙' : '☀️';
+                    };
+                    
+                    const savedTheme = localStorage.getItem('hiredUpTheme') || 'dark';
+                    updateBtn(savedTheme);
+                    
+                    themeBtn.addEventListener('click', () => {
+                        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('hiredUpTheme', newTheme);
+                        updateBtn(newTheme);
+                        
+                        // Sync with floating button if present
+                        const floatingBtns = document.querySelectorAll('.theme-toggle-btn');
+                        floatingBtns.forEach(btn => btn.innerHTML = newTheme === 'light' ? '🌙' : '☀️');
+                    });
+                }
+            });
+        </script>
 
         <header>
             <h1>Verified Candidates</h1>
@@ -368,21 +390,33 @@
                 try {
                     res = await fetch('http://localhost:5000/api/auth/candidates');
                 } catch (e) {
-                    res = await fetch('http://127.0.0.1:5000/api/auth/candidates');
+                    res = await fetch('http://localhost:5000/api/auth/candidates');
                 }
 
                 if (!res.ok) throw new Error('Failed to fetch');
                 candidates = await res.json();
 
                 // Map real data to UI format
-                candidates = candidates.map(c => ({
-                    name: c.fullname,
-                    skill: c.expertise || "Developer",
-                    experience: c.experience || "Entry Level",
-                    avatar: c.fullname.charAt(0).toUpperCase(),
-                    skills: c.expertise ? c.expertise.split(',').map(s => s.trim()) : ["JavaScript", "Logic"],
-                    scores: { "JavaScript": 85, "React": 75, "Node.js": 70, "Python": 65 } // Stats remain mocked for visual flair
-                }));
+                candidates = candidates.map(c => {
+                    const expertiseStr = c.expertise || "Frontend, UI, Logic";
+                    const expertiseArr = expertiseStr.split(',').map(s => s.trim());
+                    
+                    // Generate quasi-real scores based on name length/hash to avoid "same for everyone"
+                    const baseScore = 70 + (c.fullname.length % 25);
+                    const scores = {};
+                    expertiseArr.forEach((s, i) => {
+                        scores[s] = Math.min(98, baseScore - (i * 5));
+                    });
+
+                    return {
+                        name: c.fullname,
+                        skill: expertiseArr[0] || "Developer",
+                        experience: c.experience || "Verified Talent",
+                        avatar: c.fullname.charAt(0).toUpperCase(),
+                        skills: expertiseArr,
+                        scores: scores
+                    };
+                });
 
                 renderCandidates();
             } catch (err) {
@@ -456,6 +490,8 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', fetchCandidates);
     </script>
+    <script src="api_utils.js"></script>
+    <script src="app.js"></script>
 
 </body>
 

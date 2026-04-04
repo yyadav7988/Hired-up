@@ -22,7 +22,41 @@ const ProblemSolve = () => {
     const [submitting, setSubmitting] = useState(false);
     const [customInput, setCustomInput] = useState('');
     const [testResults, setTestResults] = useState(null);
+    const [aiFeedback, setAiFeedback] = useState(null);
     const [initialTestIndex, setInitialTestIndex] = useState(0);
+    const [theme, setTheme] = useState(() => localStorage.getItem('hiredUpTheme') || 'dark');
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hiredUpTheme', theme);
+    }, [theme]);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
+
+    const toggleFocusMode = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+        // Force theme change when entering/exiting focus mode
+        toggleTheme();
+    };
 
     const languages = [
         { id: 'javascript', label: 'JavaScript' },
@@ -135,7 +169,7 @@ const ProblemSolve = () => {
                  setInitialTestIndex(0);
             }
 
-            await api.post('/submissions', {
+            const subRes = await api.post('/submissions', {
                 problemId: id,
                 code,
                 language: language.id,
@@ -143,6 +177,11 @@ const ProblemSolve = () => {
                 output: finalOutput,
                 executionTime: runData.time || 0
             });
+            
+            if (subRes.data && subRes.data.aiFeedback) {
+                setAiFeedback(subRes.data.aiFeedback);
+            }
+
             setStatus(finalStatus === 'Accepted' ? 'Success' : 'Failed');
             setOutput('Submission saved successfully!\nStatus: ' + finalStatus);
         } catch (err) {
@@ -186,6 +225,23 @@ const ProblemSolve = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleFocusMode}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all border border-[#3e3e3e] hover:border-[#5e5e5e] ${isFullscreen ? 'bg-indigo-600 border-indigo-400' : ''}`}
+                        title={isFullscreen ? 'Exit Focus Mode' : 'Enter Focus Mode (Fullscreen)'}
+                    >
+                        {isFullscreen ? '内' : '🔲'}
+                    </button>
+
+                    <button
+                        onClick={toggleTheme}
+                        className="w-8 h-8 flex items-center justify-center rounded-full transition-all border border-[#3e3e3e] hover:border-[#5e5e5e]"
+                        style={{ backgroundColor: 'var(--leetcode-dark-layer)', fontSize: '1rem' }}
+                        title="Toggle Dark/Bright Mode"
+                    >
+                        {theme === 'light' ? '🌙' : '☀️'}
+                    </button>
+
                     <select
                         className="bg-[#3e3e3e] border border-[#4e4e4e] rounded px-3 py-1 text-xs font-medium text-gray-200 outline-none cursor-pointer hover:bg-[#4e4e4e]"
                         value={language.id}
@@ -256,6 +312,7 @@ const ProblemSolve = () => {
                             testResults={testResults}
                             problem={problem}
                             initialTestIndex={initialTestIndex}
+                            aiFeedback={aiFeedback}
                         />
                     </div>
                 </div>

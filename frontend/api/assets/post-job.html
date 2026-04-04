@@ -11,15 +11,8 @@
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="style.css">
     <style>
-        :root {
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --neon-glow: 0 0 20px rgba(79, 70, 229, 0.3);
-        }
-
         body {
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #000);
-            min-height: 100vh;
+            color: var(--text-main);
         }
 
         .form-section {
@@ -87,9 +80,9 @@
         }
 
         .glass-card {
-            background: var(--glass-bg);
+            background: var(--bg-card, rgba(15, 23, 42, 0.7));
             backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--border-subtle);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
@@ -216,12 +209,12 @@
 
 <body>
     <script>
-        // Immediate auth check
-        const user = JSON.parse(localStorage.getItem('hiredUpUser'));
-        if (!user || user.role !== 'Recruiter') {
-            alert('🚫 ACCESS DENIED: Mission Launch requires Recruiter clearance.');
-            window.location.href = 'auth.html';
-        }
+    // Immediate auth check
+    const user = JSON.parse(localStorage.getItem('hiredUpUser'));
+    if (!user || (user.role !== 'Recruiter' && user.role !== 'RECRUITER')) {
+        alert('🚫 ACCESS DENIED: Mission Launch requires Recruiter clearance.');
+        window.location.href = 'auth.html';
+    }
     </script>
 
     <nav class="navbar">
@@ -242,12 +235,37 @@
                 <span>HiredUp</span>
             </a>
             <div class="nav-links">
+                <button id="nav-theme-toggle" style="background:none;border:none;color:var(--text-main);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:5px;margin-right:1rem;">
+                    🌙
+                </button>
                 <a href="recruiter.html" class="nav-link">Dashboard</a>
                 <a href="#" class="nav-link active">Post Job</a>
             </div>
             <div>
-                <a href="profile.html" class="btn btn-sm btn-outline">My Profile</a>
+                <a href="profile.html" class="btn btn-sm btn-outline" style="color:var(--text-main);border-color:var(--border-subtle);">My Profile</a>
             </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const themeBtn = document.getElementById('nav-theme-toggle');
+                    if(themeBtn) {
+                        const updateBtn = (t) => themeBtn.innerHTML = t === 'light' ? '🌙' : '☀️';
+                        const savedTheme = localStorage.getItem('hiredUpTheme') || 'dark';
+                        updateBtn(savedTheme);
+                        
+                        themeBtn.addEventListener('click', () => {
+                            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                            document.documentElement.setAttribute('data-theme', newTheme);
+                            localStorage.setItem('hiredUpTheme', newTheme);
+                            updateBtn(newTheme);
+                            
+                            const floatingBtns = document.querySelectorAll('.theme-toggle-btn');
+                            floatingBtns.forEach(btn => btn.innerHTML = newTheme === 'light' ? '🌙' : '☀️');
+                        });
+                    }
+                });
+            </script>
         </div>
     </nav>
 
@@ -510,27 +528,40 @@
             const jobData = {
                 title: document.getElementById('job-title').value,
                 description: document.getElementById('job-desc').value,
-                techStack: techStack,
+                skillsRequired: techStack,   // backend expects skillsRequired
+                techStack: techStack,         // also send techStack for recruiter.html display compatibility
                 requirements: document.getElementById('job-requirements').value.split('\n').filter(r => r.trim()),
                 location: document.getElementById('job-location').value,
                 salaryRange: document.getElementById('job-salary').value,
                 challenges: selectedChallenges,
-                postedBy: user ? user._id : null
+                postedBy: user ? user.id : null
             };
 
             try {
-                // Try localhost first, then 127.0.0.1
+                const token = localStorage.getItem('hiredUpToken');
+                if (!token) {
+                    alert('❌ You must be logged in as a Recruiter to post a job.\nPlease log in again.');
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
                 let response;
                 try {
                     response = await fetch('http://localhost:5000/api/jobs', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify(jobData)
                     });
                 } catch (e) {
                     response = await fetch('http://127.0.0.1:5000/api/jobs', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
                         body: JSON.stringify(jobData)
                     });
                 }

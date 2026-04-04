@@ -12,6 +12,16 @@ const AptitudeTest = () => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [results, setResults] = useState({ correct: 0, wrong: 0, completed: false });
     const [loading, setLoading] = useState(true);
+    const [theme, setTheme] = useState(() => localStorage.getItem('hiredUpTheme') || 'dark');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hiredUpTheme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -128,9 +138,18 @@ const AptitudeTest = () => {
         <div className="min-h-screen bg-[#0a0a0c] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30">
             <div className="max-w-3xl mx-auto">
                 <div className="flex justify-between items-center mb-10">
-                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500/60">
-                        Section: {topic || 'Aptitude'}
-                    </span>
+                    <div className="flex items-center gap-6">
+                        <button
+                            onClick={toggleTheme}
+                            className="w-10 h-10 flex items-center justify-center rounded-full transition-all border border-white/10 hover:border-blue-500/40 bg-white/5"
+                            title="Toggle Dark/Bright Mode"
+                        >
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+                        <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500/60">
+                            Section: {topic || 'Aptitude'}
+                        </span>
+                    </div>
                     <span className="bg-white/5 px-4 py-1.5 rounded-full text-xs font-bold border border-white/5">
                         Question {currentIndex + 1} of {questions.length}
                     </span>

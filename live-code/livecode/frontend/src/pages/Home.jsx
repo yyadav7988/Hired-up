@@ -3,9 +3,30 @@ import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
     const navigate = useNavigate();
+    const [theme, setTheme] = React.useState(localStorage.getItem('hiredUpTheme') || 'dark');
+
+    React.useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hiredUpTheme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     return (
         <div className="min-h-screen bg-mesh relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+            {/* Theme Toggle */}
+            <div className="absolute top-6 right-6 z-50">
+                <button 
+                    onClick={toggleTheme}
+                    className="p-3 rounded-xl glass-panel text-xl hover:scale-110 transition-all border border-white/10"
+                    title={theme === 'light' ? 'Switch to Dark' : 'Switch to Light'}
+                >
+                    {theme === 'light' ? '🌙' : '☀️'}
+                </button>
+            </div>
+
             {/* Animated background elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '0s' }}></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '2s' }}></div>

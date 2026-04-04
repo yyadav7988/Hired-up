@@ -2,7 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
-const pool = require('../config/db');
+const Certificate = require('../models/Certificate');
 const { authenticate, candidateOnly } = require('../middleware/auth');
 
 const router = express.Router();
@@ -50,11 +50,15 @@ async function callMLVerify(filePath, url) {
  */
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, platform, credential_url, trust_score, status, created_at FROM certificates WHERE candidate_id = $1 ORDER BY created_at DESC',
-      [req.user.id]
-    );
-    res.json(result.rows);
+    const certificates = await Certificate.find({ candidate_id: req.user.id }).sort({ created_at: -1 });
+    res.json(certificates.map(c => ({
+      id: c.id,
+      platform: c.platform,
+      credential_url: c.credential_url,
+      trust_score: c.trust_score,
+      status: c.status,
+      created_at: c.created_at
+    })));
   } catch (err) {
     console.error('Certificates list error:', err);
     res.status(500).json({ error: 'Failed to fetch certificates' });
@@ -75,11 +79,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const trustScore = verifyResult.trust_score ?? 0;
     const status = (verifyResult.status || 'PENDING').toUpperCase().replace('UNVERIFIABLE', 'FAILED');
 
-    await pool.query(
-      `INSERT INTO certificates (id, candidate_id, platform, file_path, trust_score, status, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, req.user.id, verifyResult.platform || 'unknown', filePath, trustScore, status, JSON.stringify(verifyResult.metadata || {})]
-    );
+    const newCert = new Certificate({
+      _id: id,
+      candidate_id: req.user.id,
+      platform: verifyResult.platform || 'unknown',
+      file_path: filePath,
+      trust_score: trustScore,
+      status: status,
+      metadata: verifyResult.metadata || {}
+    });
+
+    await newCert.save();
 
     res.status(201).json({
       id,
@@ -109,11 +119,17 @@ router.post('/url', async (req, res) => {
     const trustScore = verifyResult.trust_score ?? 0;
     const status = (verifyResult.status || 'PENDING').toUpperCase().replace('UNVERIFIABLE', 'FAILED');
 
-    await pool.query(
-      `INSERT INTO certificates (id, candidate_id, platform, credential_url, trust_score, status, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, req.user.id, verifyResult.platform || 'unknown', credentialUrl, trustScore, status, JSON.stringify(verifyResult.metadata || {})]
-    );
+    const newCert = new Certificate({
+      _id: id,
+      candidate_id: req.user.id,
+      platform: verifyResult.platform || 'unknown',
+      credential_url: credentialUrl,
+      trust_score: trustScore,
+      status: status,
+      metadata: verifyResult.metadata || {}
+    });
+
+    await newCert.save();
 
     res.status(201).json({
       id,

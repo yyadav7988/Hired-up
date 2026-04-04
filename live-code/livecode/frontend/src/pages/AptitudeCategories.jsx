@@ -6,6 +6,16 @@ const AptitudeCategories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [theme, setTheme] = useState(() => localStorage.getItem('hiredUpTheme') || 'dark');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hiredUpTheme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -38,17 +48,26 @@ const AptitudeCategories = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0c] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30">
             <div className="max-w-6xl mx-auto">
-                <header className="mb-12">
+                <header className="mb-12 flex justify-between items-start">
+                    <div>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="text-gray-500 hover:text-white transition-colors mb-6 flex items-center gap-2 group"
+                        >
+                            <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Dashboard
+                        </button>
+                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                            Aptitude <span className="text-blue-500">Practice</span>
+                        </h1>
+                        <p className="text-gray-400 mt-3 text-lg">Select a specific topic carefully to sharpen your skills.</p>
+                    </div>
                     <button
-                        onClick={() => navigate('/')}
-                        className="text-gray-500 hover:text-white transition-colors mb-6 flex items-center gap-2 group"
+                        onClick={toggleTheme}
+                        className="w-12 h-12 flex items-center justify-center rounded-full transition-all border border-white/10 hover:border-blue-500/40 bg-white/5 mt-10"
+                        title="Toggle Dark/Bright Mode"
                     >
-                        <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Dashboard
+                        {theme === 'light' ? '🌙' : '☀️'}
                     </button>
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                        Aptitude <span className="text-blue-500">Practice</span>
-                    </h1>
-                    <p className="text-gray-400 mt-3 text-lg">Select a specific topic carefully to sharpen your skills.</p>
                 </header>
 
                 <div className="space-y-12">

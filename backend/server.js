@@ -3,6 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const connectDB = require('./config/db');
+
+// Connect to MongoDB
+connectDB();
 
 const authRoutes = require('./routes/auth');
 const jobsRoutes = require('./routes/jobs');
@@ -10,6 +14,7 @@ const assessmentsRoutes = require('./routes/assessments');
 const takeRoutes = require('./routes/take');
 const certificatesRoutes = require('./routes/certificates');
 const scoringRoutes = require('./routes/scoring');
+const performanceRoutes = require('./routes/performance');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +37,7 @@ app.use('/api/assessments', assessmentsRoutes);
 app.use('/api/take', takeRoutes);
 app.use('/api/certificates', certificatesRoutes);
 app.use('/api/scoring', scoringRoutes);
+app.use('/api/performance', performanceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

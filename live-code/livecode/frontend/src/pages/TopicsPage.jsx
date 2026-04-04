@@ -94,6 +94,16 @@ const TopicsPage = () => {
     const [problems, setProblems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedTopic, setExpandedTopic] = useState(null);
+    const [theme, setTheme] = useState(() => localStorage.getItem('hiredUpTheme') || 'dark');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('hiredUpTheme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     useEffect(() => {
         const fetch = async () => {
@@ -148,9 +158,19 @@ const TopicsPage = () => {
                         <div className="h-5 w-[1px] bg-[#3e3e3e]"></div>
                         <h1 className="text-lg font-bold text-white">Browse by Topic</h1>
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">
-                        {topicEntries.length} Topics · {problems.length} Problems
-                    </span>
+                    <div className="flex items-center gap-6">
+                        <button
+                            onClick={toggleTheme}
+                            className="w-10 h-10 flex items-center justify-center rounded-full transition-all border border-[#3e3e3e] hover:border-[#5e5e5e]"
+                            style={{ backgroundColor: 'var(--leetcode-dark-layer)', fontSize: '1.2rem' }}
+                            title="Toggle Dark/Bright Mode"
+                        >
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+                        <span className="text-xs text-gray-500 font-medium">
+                            {topicEntries.length} Topics · {problems.length} Problems
+                        </span>
+                    </div>
                 </div>
             </header>
 

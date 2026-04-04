@@ -1,35 +1,34 @@
 const mongoose = require('mongoose');
-
-const assessmentSchema = new mongoose.Schema({
-  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
-  name: { type: String, required: true },
-  type: { type: String, enum: ['MCQ', 'CODING', 'MIXED'], required: true },
-  config: { type: mongoose.Schema.Types.Mixed, default: {} },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const questionSchema = new mongoose.Schema({
-  assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment', required: true },
-  type: { type: String, enum: ['MCQ_SINGLE', 'MCQ_MULTIPLE', 'CODING'], required: true },
-  content: { type: String, required: true },
-  options: mongoose.Schema.Types.Mixed,
-  correctAnswer: mongoose.Schema.Types.Mixed,
-  difficulty: { type: String, enum: ['EASY', 'MEDIUM', 'HARD'], default: 'MEDIUM' },
-  points: { type: Number, default: 10 },
-  orderIndex: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
-});
+const { v4: uuidv4 } = require('uuid');
 
 const testCaseSchema = new mongoose.Schema({
-  questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
-  inputData: String,
-  expectedOutput: { type: String, required: true },
-  isHidden: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
-});
+  input_data: { type: String, default: '' },
+  expected_output: { type: String, default: '' },
+  is_hidden: { type: Boolean, default: false }
+}, { _id: false });
 
-module.exports = {
-  Assessment: mongoose.model('Assessment', assessmentSchema),
-  Question: mongoose.model('Question', questionSchema),
-  TestCase: mongoose.model('TestCase', testCaseSchema)
-};
+const questionSchema = new mongoose.Schema({
+  _id: { type: String, default: uuidv4 },
+  type: { type: String, required: true }, // 'MCQ_SINGLE', 'MCQ_MULTIPLE', 'CODING'
+  content: { type: String, required: true },
+  options: { type: mongoose.Schema.Types.Mixed },
+  correct_answer: { type: mongoose.Schema.Types.Mixed },
+  difficulty: { type: String, default: 'MEDIUM' },
+  points: { type: Number, default: 10 },
+  order_index: { type: Number, default: 0 },
+  testCases: [testCaseSchema] // only applicable for CODING
+});
+questionSchema.virtual('id').get(function() { return this._id; });
+
+const assessmentSchema = new mongoose.Schema({
+  _id: { type: String, default: uuidv4 },
+  job_id: { type: String, required: true, ref: 'Job' },
+  name: { type: String, required: true },
+  type: { type: String, required: true },
+  config: { type: mongoose.Schema.Types.Mixed, default: {} },
+  questions: [questionSchema]
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
+assessmentSchema.virtual('id').get(function() { return this._id; });
+
+module.exports = mongoose.model('Assessment', assessmentSchema);

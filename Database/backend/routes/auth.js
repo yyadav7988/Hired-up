@@ -253,7 +253,7 @@ router.get("/profile/:email", async (req, res) => {
 /* ===================== GET ALL CANDIDATES ===================== */
 router.get("/candidates", async (req, res) => {
   try {
-    const candidates = await User.find({ role: "Candidate" });
+    const candidates = await User.find({ role: { $regex: /^candidate$/i } });
     res.json(candidates);
   } catch (err) {
     console.error(err);

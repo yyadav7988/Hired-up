@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-
+    <link rel="stylesheet" href="index.css">
     <style>
         * {
             margin: 0;
@@ -16,10 +16,7 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #0b1120, #0a0f1f 60%, #052d2d);
-            color: white;
-            min-height: 100vh;
+            color: var(--text-main);
         }
 
         /* ================= NAVBAR ================= */
@@ -29,7 +26,7 @@
             left: 0;
             width: 100%;
             height: 70px;
-            background: #0b1120;
+            background: var(--bg-dark, #0b1120);
             display: flex;
             align-items: center;
             padding: 0 40px;
@@ -96,9 +93,9 @@
 
         .filters input,
         .filters select {
-            background: #0f172a;
+            background: var(--bg-card, #0f172a);
             border: 1px solid rgba(255, 255, 255, .2);
-            color: white;
+            color: var(--text-main);
             padding: 10px 14px;
             border-radius: 10px;
             min-width: 180px;
@@ -107,8 +104,8 @@
 
         /* Fix invisible dropdown bug */
         .filters select option {
-            background: #0f172a;
-            color: white;
+            background: var(--bg-dark, #0f172a);
+            color: var(--text-main);
         }
 
         .filters input::placeholder {
@@ -260,7 +257,7 @@
         }
 
         .modal-content {
-            background: #0f172a;
+            background: var(--bg-card, #0f172a);
             padding: 30px;
             border-radius: 15px;
             width: 300px;
@@ -280,11 +277,36 @@
     <!-- NAVBAR -->
     <div class="navbar">
         <div class="logo">HiredUp</div>
-        <div class="nav-right">
+        <div class="nav-right" style="align-items: center;">
+            <button id="nav-theme-toggle" style="background:none;border:none;color:var(--text-main);font-size:1.15rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:5px;margin-right:1rem;">
+                🌙
+            </button>
             <a href="candidates.html" class="nav-btn btn-outline">Candidates</a>
             <a href="profile.html" class="nav-btn btn-outline">Dashboard</a>
             <a href="index.html" class="nav-btn btn-primary">Home</a>
         </div>
+        
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const themeBtn = document.getElementById('nav-theme-toggle');
+                if(themeBtn) {
+                    const updateBtn = (t) => themeBtn.innerHTML = t === 'light' ? '🌙' : '☀️';
+                    const savedTheme = localStorage.getItem('hiredUpTheme') || 'dark';
+                    updateBtn(savedTheme);
+                    
+                    themeBtn.addEventListener('click', () => {
+                        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('hiredUpTheme', newTheme);
+                        updateBtn(newTheme);
+                        
+                        const floatingBtns = document.querySelectorAll('.theme-toggle-btn');
+                        floatingBtns.forEach(btn => btn.innerHTML = newTheme === 'light' ? '🌙' : '☀️');
+                    });
+                }
+            });
+        </script>
     </div>
 
     <div class="container">
@@ -385,6 +407,7 @@
     </div>
 
     <script src="api_utils.js"></script>
+    <script src="app.js"></script>
     <script>
         function openModal(name, skills) {
             document.getElementById("modalName").innerText = name;

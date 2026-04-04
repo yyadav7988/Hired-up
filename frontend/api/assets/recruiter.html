@@ -1,670 +1,707 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Command Center | HiredUp</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        :root {
-            --glass-bg: rgba(15, 23, 42, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --primary-neon: #4f46e5;
-            --accent-neon: #06b6d4;
-            --surface-low: #020617;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruiter Command Center | HiredUp</title>
+  <meta name="description" content="AI-powered recruiter dashboard — view ranked candidates, score breakdowns, and manage your hiring pipeline.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+        color: var(--text-main);
+    }
+    body::before {
+      content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px; pointer-events: none; z-index: 0;
+    }
+    main { position: relative; z-index: 1; }
 
-        body {
-            background:
-                radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
-                var(--surface-low);
-            color: #f8fafc;
-            font-family: 'Outfit', sans-serif;
-            min-height: 100vh;
-            margin: 0;
-            overflow-x: hidden;
-        }
+    /* NAV */
+    .cyber-nav {
+      background: var(--bg-glass, rgba(2,6,23,0.88)); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1.1rem 0; position: fixed; width: 100%; top: 0; z-index: 1000;
+    }
+    .nav-inner { max-width: 1400px; margin: 0 auto; padding: 0 2rem;
+      display: flex; justify-content: space-between; align-items: center; }
 
-        /* Cyberpunk Grid Effect */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: -1;
-        }
+    /* STAT CARDS */
+    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.25rem; margin-bottom: 3rem; }
+    @media(max-width:900px){ .stat-grid{ grid-template-columns: repeat(2,1fr); } }
+    .g-card {
+      background: var(--bg-card, rgba(15,23,42,0.65)); backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle); border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    
+    .stat-card {
+      background: var(--bg-card, rgba(15,23,42,0.65)); backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle); border-radius: 20px;
+      padding: 1.75rem; position: relative; overflow: hidden;
+      transition: all 0.3s;
+    }
 
-        .cyber-nav {
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 1.25rem 0;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-        }
+    /* RANKINGS TABLE */
+    .elite-table { width:100%; border-collapse: separate; border-spacing: 0 0.75rem; }
+    .elite-table th { padding:0.75rem 1.25rem; text-align:left; font-size:0.68rem; text-transform:uppercase; letter-spacing:2px; color:#475569; font-weight:800; }
+    .elite-row { background: rgba(255,255,255,0.02); transition: all 0.25s; cursor: pointer; }
+    .elite-row:hover { background: rgba(255,255,255,0.045); transform: translateX(4px); }
+    .elite-row td { padding:1.1rem 1.25rem; border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border); vertical-align:middle; }
+    .elite-row td:first-child { border-left:1px solid var(--glass-border); border-radius:14px 0 0 14px; }
+    .elite-row td:last-child  { border-right:1px solid var(--glass-border); border-radius:0 14px 14px 0; }
+    .elite-row.selected { background: rgba(79,70,229,0.08) !important; border-color: rgba(79,70,229,0.3) !important; }
 
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+    .score-pill { display:inline-block; padding:0.2rem 0.7rem; border-radius:99px; font-weight:800; font-size:0.85rem; }
+    .score-high { background:rgba(16,185,129,0.15); color:#34d399; }
+    .score-mid  { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .score-low  { background:rgba(239,68,68,0.15);  color:#f87171; }
 
-        .glass-card:hover {
-            border-color: rgba(79, 70, 229, 0.4);
-            transform: translateY(-5px);
-            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
-        }
+    .mini-bar { height:6px; background:rgba(255,255,255,0.06); border-radius:99px; width:120px; overflow:hidden; }
+    .mini-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#4f46e5,#06b6d4); transition:width 1s; }
 
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 4rem;
-        }
+    .avatar-sq { width:40px; height:40px; background:rgba(79,70,229,0.12); border:1px solid rgba(79,70,229,0.25);
+      border-radius:10px; display:flex; align-items:center; justify-content:center;
+      font-weight:900; color:var(--primary-neon); font-size:1rem; flex-shrink:0; }
 
-        .stat-card {
-            padding: 2.5rem;
-            position: relative;
-            overflow: hidden;
-        }
+    /* STATUS SELECT */
+    select.status-sel {
+      background: rgba(15,23,42,0.8); border:1px solid var(--glass-border);
+      color:#f8fafc; padding:0.3rem 0.65rem; border-radius:8px; font-size:0.75rem;
+      font-weight:700; font-family:inherit; cursor:pointer; outline:none;
+    }
 
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-neon), var(--accent-neon));
-            opacity: 0.6;
-        }
+    /* DETAIL PANEL */
+    #detail-panel {
+      display:none; position:fixed; right:0; top:0; bottom:0; width:420px;
+      background:rgba(5,10,30,0.97); backdrop-filter:blur(30px);
+      border-left:1px solid var(--glass-border); z-index:500;
+      padding:5rem 2rem 2rem; overflow-y:auto;
+    }
+    #detail-panel.open { display:block; }
+    .close-panel { position:absolute; top:1.5rem; right:1.5rem; background:rgba(255,255,255,0.06);
+      border:1px solid var(--glass-border); color:#fff; cursor:pointer; border-radius:8px;
+      padding:0.4rem 0.75rem; font-size:0.8rem; font-weight:700; }
 
-        .stat-card h2 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin: 0.5rem 0;
-            letter-spacing: -2px;
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    /* JOB SELECT */
+    select.job-sel {
+      background:rgba(15,23,42,0.9); border:1px solid rgba(79,70,229,0.4);
+      color:#f8fafc; padding:0.55rem 1rem; border-radius:10px;
+      font-size:0.85rem; font-weight:700; font-family:inherit; cursor:pointer; outline:none;
+    }
 
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            color: #64748b;
-            font-weight: 800;
-        }
+    /* CHART */
+    .chart-wrap { height: 200px; position:relative; }
 
-        .mission-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2.5rem;
-        }
+    /* BADGE */
+    .badge-live {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(16,185,129,0.1); color:#10b981;
+      padding:0.35rem 0.8rem; border-radius:8px; font-size:0.65rem;
+      font-weight:900; text-transform:uppercase; letter-spacing:1.5px;
+      border:1px solid rgba(16,185,129,0.2);
+    }
+    .badge-live::before { content:''; width:7px; height:7px; background:#10b981; border-radius:50%; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
 
-        .mission-card {
-            padding: 3rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 380px;
-        }
+    /* ANIMATE */
+    .ani { opacity:0; animation:fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
-        .mission-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-        }
-
-        .mission-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            margin: 0;
-            letter-spacing: -0.5px;
-            color: #f1f5f9;
-        }
-
-        .tech-tag {
-            background: rgba(79, 70, 229, 0.1);
-            border: 1px solid rgba(79, 70, 229, 0.2);
-            padding: 0.35rem 0.85rem;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: #a5b4fc;
-            font-weight: 600;
-        }
-
-        .elite-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 1rem;
-        }
-
-        .elite-table th {
-            padding: 1.5rem;
-            text-align: left;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #475569;
-        }
-
-        .elite-row {
-            background: rgba(255, 255, 255, 0.02);
-            transition: all 0.3s;
-        }
-
-        .elite-row:hover {
-            background: rgba(255, 255, 255, 0.04);
-            transform: translateX(10px);
-        }
-
-        .elite-row td {
-            padding: 1.75rem;
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .elite-row td:first-child {
-            border-left: 1px solid var(--glass-border);
-            border-radius: 20px 0 0 20px;
-        }
-
-        .elite-row td:last-child {
-            border-right: 1px solid var(--glass-border);
-            border-radius: 0 20px 20px 0;
-        }
-
-        .benchmark-bar {
-            height: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            width: 160px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .benchmark-fill {
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-neon), var(--accent-neon));
-            box-shadow: 0 0 15px var(--primary-neon);
-            border-radius: 20px;
-            transition: width 1s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-
-        .badge-live {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            padding: 0.4rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.65rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .badge-live::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: #10b981;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 10px #10b981;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.4);
-                opacity: 0.4;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .animate-in {
-            opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn-glow-elite {
-            background: linear-gradient(135deg, var(--primary-neon), var(--accent-neon));
-            color: white;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 1.25rem 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 0 25px rgba(79, 70, 229, 0.4);
-            border: none;
-            transition: all 0.3s;
-        }
-
-        .btn-glow-elite:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(79, 70, 229, 0.6);
-        }
-
-        .avatar-ui {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            color: var(--primary-neon);
-            font-size: 1.2rem;
-        }
-    </style>
+    .btn-glow {
+      background:linear-gradient(135deg,#4f46e5,#06b6d4); color:#fff;
+      font-weight:800; letter-spacing:.5px; text-transform:uppercase;
+      padding:0.9rem 2rem; border-radius:14px;
+      box-shadow:0 0 20px rgba(79,70,229,0.4); border:none; cursor:pointer; transition:all 0.3s;
+      text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem;
+    }
+    .btn-glow:hover { transform:scale(1.04); box-shadow:0 0 35px rgba(79,70,229,0.6); }
+    .hidden { display:none !important; }
+  </style>
 </head>
-
 <body>
-    <script>
-        // Immediate auth check
-        const user = JSON.parse(localStorage.getItem('hiredUpUser'));
-        if (!user || user.role !== 'Recruiter') {
-            alert('🚫 ACCESS DENIED: Elite Clearance Required.');
-            window.location.href = 'auth.html';
-        }
-    </script>
-
-    <nav class="cyber-nav">
-        <div class="container flex justify-between items-center" style="max-width: 1400px;">
-            <a href="index.html" class="nav-logo" style="text-decoration: none; color: white;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2"
-                        stroke-linejoin="round" />
-                    <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linejoin="round" />
-                    <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linejoin="round" />
-                    <defs>
-                        <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#4f46e5" />
-                            <stop offset="1" stop-color="#06b6d4" />
-                        </linearGradient>
-                    </defs>
-                </svg>
-                <div style="display: flex; flex-direction: column; margin-left: 12px;">
-                    <span
-                        style="font-weight: 900; font-size: 1.4rem; letter-spacing: -1px; line-height: 1;">HiredUp</span>
-                    <span
-                        style="font-size: 0.6rem; letter-spacing: 4px; opacity: 0.5; font-weight: 900; text-transform: uppercase;">Command
-                        Center</span>
-                </div>
-            </a>
-            <div class="nav-links flex gap-12">
-                <a href="#" class="nav-link active" style="font-weight: 800; color: #fff;">DASHBOARD</a>
-                <a href="post-job.html" class="nav-link" style="font-weight: 600; opacity: 0.6;">NEW MISSION</a>
-            </div>
-            <div class="flex items-center gap-5">
-                <div class="text-right">
-                    <div id="user-name" class="font-black text-sm tracking-tight">RECRUITER_ALPHA</div>
-                    <div id="user-details"
-                        class="text-[0.6rem] font-bold text-primary tracking-[1px] opacity-80 uppercase">Elite Tier
-                        Access</div>
-                </div>
-                <div class="avatar-ui">R</div>
-            </div>
+  <!-- NAV -->
+  <nav class="cyber-nav">
+    <div class="nav-inner">
+      <a href="index.html" style="text-decoration:none;color:#fff;display:flex;align-items:center;gap:12px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#g1)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="url(#g1)" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="url(#g1)" stroke-width="2" stroke-linejoin="round"/>
+          <defs><linearGradient id="g1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#4f46e5"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+        <div>
+          <div style="font-weight:900;font-size:1.25rem;letter-spacing:-1px;line-height:1;">HiredUp</div>
+          <div style="font-size:0.55rem;letter-spacing:4px;opacity:0.4;font-weight:900;text-transform:uppercase;">Command Center</div>
         </div>
-    </nav>
-
-    <main style="padding: 180px 0 100px 0;">
-        <div class="container" style="max-width: 1400px;">
-            <!-- Real-time Status -->
-            <div class="stat-grid">
-                <div class="glass-card stat-card animate-in" style="animation-delay: 0.1s;">
-                    <div class="stat-label">Active Deployments</div>
-                    <h2 id="stats-jobs">0</h2>
-                    <div class="flex items-center gap-2 mt-4 text-[0.65rem] font-bold text-success">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="3">
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                            <polyline points="17 6 23 6 23 12"></polyline>
-                        </svg>
-                        <span>STABLE_RECRUITMENT</span>
-                    </div>
-                </div>
-                <div class="glass-card stat-card animate-in" style="animation-delay: 0.2s;">
-                    <div class="stat-label">Identified Assets</div>
-                    <h2 id="stats-candidates">0</h2>
-                    <div class="flex items-center gap-2 mt-4 text-[0.65rem] font-bold opacity-40">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                        <span>GLOBAL_SCAN_COMPLETE</span>
-                    </div>
-                </div>
-                <div class="glass-card stat-card animate-in" style="animation-delay: 0.3s;">
-                    <div class="stat-label">AI Benchmark Scores</div>
-                    <h2 id="stats-evals">0</h2>
-                    <div class="flex items-center gap-2 mt-4 text-[0.65rem] font-bold text-primary">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                        <span>NEURAL_ENGINE_ACTIVE</span>
-                    </div>
-                </div>
-                <div class="glass-card stat-card animate-in" style="animation-delay: 0.4s;">
-                    <div class="stat-label">Talent Density</div>
-                    <h2 id="stats-score" style="color: #10b981;">0%</h2>
-                    <div class="flex items-center gap-2 mt-4 text-[0.65rem] font-bold opacity-40">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        <span>AVG_KPI_BENCHMARK</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Jobs Section -->
-            <div class="flex justify-between items-end mb-12">
-                <div>
-                    <h2 style="font-size: 2.8rem; font-weight: 800; margin: 0; letter-spacing: -1.5px;">Active <span
-                            class="text-gradient">Hunt Missions</span></h2>
-                    <p style="color: #64748b; font-size: 1.1rem; margin-top: 8px; font-weight: 500;">Monitor live
-                        recruitment flows and technical benchmarks.</p>
-                </div>
-                <a href="post-job.html" class="btn btn-glow-elite">LAUNCH NEW MISSION</a>
-            </div>
-
-            <div id="jobs-grid" class="mission-grid mb-32">
-                <!-- Fallback Loading -->
-                <div class="glass-card p-24 text-center col-span-2">
-                    <div class="mb-6 opacity-10">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1">
-                            <path
-                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                            </path>
-                        </svg>
-                    </div>
-                    <p class="text-2xl font-bold opacity-30">SCANNING ENCRYPTION...</p>
-                </div>
-            </div>
-
-            <!-- Talent Ranking -->
-            <div
-                style="background: rgba(255,255,255,0.01); border-radius: 40px; padding: 4rem; border: 1px solid var(--glass-border);">
-                <div class="mb-12">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--primary-neon);">
-                        </div>
-                        <span
-                            style="font-size: 0.8rem; font-weight: 800; letter-spacing: 2px; color: #475569; text-transform: uppercase;">Live
-                            Ranking Engine</span>
-                    </div>
-                    <h2 style="font-size: 2.5rem; font-weight: 800; margin: 0; letter-spacing: -1px;">Elite <span
-                            class="text-gradient">Candidate Spectrum</span></h2>
-                    <p style="color: #64748b; margin-top: 10px; font-weight: 500;">AI-driven validation based on
-                        execution speed, syntax precision, and problem logic.</p>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="elite-table">
-                        <thead>
-                            <tr>
-                                <th>Candidate ID</th>
-                                <th>Specialization</th>
-                                <th>Skill Benchmark</th>
-                                <th>Execution Speed</th>
-                                <th style="text-align: right;">Deployment</th>
-                            </tr>
-                        </thead>
-                        <tbody id="candidates-table">
-                            <!-- Table rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      </a>
+      <div style="display:flex;align-items:center;gap:2rem;">
+        <button id="nav-theme-toggle" style="background:none;border:none;color:var(--text-main);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:5px;">
+            🌙
+        </button>
+        <a href="post-job.html" class="btn-glow" style="padding:0.6rem 1.4rem;font-size:0.8rem;">+ New Job</a>
+        <div style="text-align:right;">
+          <div id="nav-name" style="font-weight:900;font-size:0.9rem;color:var(--text-main);">RECRUITER</div>
+          <div id="nav-company" style="font-size:0.6rem;opacity:0.4;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text-main);">Elite Access</div>
         </div>
-    </main>
+        <button onclick="window.logout()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:0.5rem 1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.8rem;">Logout</button>
+      </div>
 
-    <script src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(localStorage.getItem('hiredUpUser'));
-            if (user && (user.fullname || user.fullName)) {
-                const displayName = (user.fullname || user.fullName);
-                document.getElementById('user-name').textContent = displayName.toUpperCase().replace(' ', '_');
-                if (user.companyName) {
-                    document.getElementById('user-details').textContent = `${user.designation || 'RECRUITER'} @ ${user.companyName}`.toUpperCase();
-                }
+            const themeBtn = document.getElementById('nav-theme-toggle');
+            if(themeBtn) {
+                const updateBtn = (t) => themeBtn.innerHTML = t === 'light' ? '🌙' : '☀️';
+                const savedTheme = localStorage.getItem('hiredUpTheme') || 'dark';
+                updateBtn(savedTheme);
+                
+                themeBtn.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('hiredUpTheme', newTheme);
+                    updateBtn(newTheme);
+                    
+                    const floatingBtns = document.querySelectorAll('.theme-toggle-btn');
+                    floatingBtns.forEach(btn => btn.innerHTML = newTheme === 'light' ? '🌙' : '☀️');
+                    
+                    // Specific fix for recruiter dashboard might require chart update if theme affects background
+                    if (typeof scoreChart !== 'undefined' && scoreChart) {
+                        // Optional redraw
+                    }
+                });
             }
-            loadJobs();
-            loadCandidates();
+        });
+    </script>
+    </div>
+  </nav>
+
+  <main style="padding:5.5rem 0 4rem;">
+    <div style="max-width:1400px;margin:0 auto;padding:0 2rem;">
+
+      <!-- HEADER ROW -->
+      <div class="flex justify-between items-center" style="margin-bottom:2.5rem;">
+        <div>
+          <div class="badge-live" style="margin-bottom:0.75rem;">System Active</div>
+          <h1 style="font-size:2.5rem;font-weight:900;letter-spacing:-1.5px;margin:0;">
+            Recruiter <span style="background:linear-gradient(90deg,#4f46e5,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Dashboard</span>
+          </h1>
+          <p style="color:#64748b;margin-top:0.5rem;font-weight:500;">AI-powered candidate rankings & hiring pipeline</p>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;">
+          <button id="csv-btn" class="btn-export" onclick="exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- STAT GRID -->
+      <div class="stat-grid ani" style="animation-delay:0.05s">
+        <div class="stat-card">
+          <div class="stat-label">Active Jobs</div>
+          <div class="stat-value" id="stat-jobs">—</div>
+          <div class="stat-sub">OPEN POSITIONS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Candidates</div>
+          <div class="stat-value" id="stat-cands">—</div>
+          <div class="stat-sub">REGISTERED</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Assessments Taken</div>
+          <div class="stat-value" id="stat-evals">—</div>
+          <div class="stat-sub">COMPLETED</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Credibility</div>
+          <div class="stat-value" id="stat-avg" style="-webkit-text-fill-color:#34d399;">—</div>
+          <div class="stat-sub">SCORE / 100</div>
+        </div>
+      </div>
+
+      <!-- MAIN GRID: Rankings + Chart -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:2rem;margin-bottom:2rem;" id="main-grid">
+
+        <!-- RANKINGS PANEL -->
+        <div class="g-card ani" style="padding:2rem;animation-delay:0.1s;">
+          <div class="flex justify-between items-center" style="margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+            <div>
+              <h2 style="font-size:1.4rem;font-weight:800;margin:0;letter-spacing:-0.5px;">Candidate Rankings</h2>
+              <p style="color:#64748b;font-size:0.85rem;margin-top:4px;">Click a row to see full score breakdown</p>
+            </div>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+              <select id="job-selector" class="job-sel" onchange="loadRankings()">
+                <option value="">— Select Job —</option>
+              </select>
+              <button onclick="refreshRankings()" style="background:rgba(79,70,229,0.12);border:1px solid rgba(79,70,229,0.3);color:#a5b4fc;padding:0.5rem 1rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.8rem;">↻ Refresh</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="elite-table" id="rankings-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Candidate</th>
+                  <th>Credibility</th>
+                  <th>Score Bar</th>
+                  <th>Certs</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rankings-body">
+                <tr><td colspan="7" style="text-align:center;padding:3rem;color:#475569;">Select a job to view rankings</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+          <!-- SCORE CHART -->
+          <div class="g-card ani" style="padding:1.5rem;animation-delay:0.15s;">
+            <h3 style="font-size:1rem;font-weight:800;margin:0 0 1rem;letter-spacing:-0.3px;">Score Distribution</h3>
+            <div class="chart-wrap">
+              <canvas id="scoreChart"></canvas>
+            </div>
+            <p style="font-size:0.72rem;color:#475569;text-align:center;margin-top:0.75rem;">Candidate credibility score spread</p>
+          </div>
+
+          <!-- PIPELINE SUMMARY -->
+          <div class="g-card ani" style="padding:1.5rem;animation-delay:0.2s;">
+            <h3 style="font-size:1rem;font-weight:800;margin:0 0 1rem;">Hiring Pipeline</h3>
+            <div style="display:flex;flex-direction:column;gap:0.65rem;" id="pipeline-view">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.85rem;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
+                <span style="font-size:0.82rem;font-weight:700;color:#fbbf24;">Reviewing</span>
+                <span id="pipe-reviewing" style="font-weight:900;color:#fbbf24;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.85rem;border-radius:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);">
+                <span style="font-size:0.82rem;font-weight:700;color:#34d399;">Shortlisted</span>
+                <span id="pipe-shortlisted" style="font-weight:900;color:#34d399;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.85rem;border-radius:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);">
+                <span style="font-size:0.82rem;font-weight:700;color:#f87171;">Rejected</span>
+                <span id="pipe-rejected" style="font-weight:900;color:#f87171;">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.85rem;border-radius:10px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);">
+                <span style="font-size:0.82rem;font-weight:700;color:#a5b4fc;">Hired</span>
+                <span id="pipe-hired" style="font-weight:900;color:#a5b4fc;">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- QUICK LINKS -->
+          <div class="g-card ani" style="padding:1.5rem;animation-delay:0.25s;">
+            <h3 style="font-size:1rem;font-weight:800;margin:0 0 1rem;">Quick Actions</h3>
+            <div style="display:flex;flex-direction:column;gap:0.65rem;">
+              <a href="post-job.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem;border-radius:10px;background:rgba(79,70,229,0.08);border:1px solid rgba(79,70,229,0.2);color:#a5b4fc;text-decoration:none;font-weight:700;font-size:0.85rem;transition:all 0.2s;">
+                <span>➕</span> Post New Job
+              </a>
+              <a href="leaderboard.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem;border-radius:10px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);color:#67e8f9;text-decoration:none;font-weight:700;font-size:0.85rem;transition:all 0.2s;">
+                <span>🏆</span> Global Leaderboard
+              </a>
+              <a href="skillgap.html" style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem;border-radius:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#34d399;text-decoration:none;font-weight:700;font-size:0.85rem;transition:all 0.2s;">
+                <span>📊</span> Skill Gap Analyzer
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOBS GRID -->
+      <div class="ani" style="animation-delay:0.3s;">
+        <h2 style="font-size:1.6rem;font-weight:800;margin:0 0 1.25rem;letter-spacing:-0.5px;">Active Job Listings</h2>
+        <div id="jobs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;">
+          <div class="g-card" style="padding:3rem;text-align:center;opacity:0.4;">
+            <p style="font-weight:700;">Loading jobs...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- CANDIDATE DETAIL PANEL -->
+  <div id="detail-panel">
+    <button class="close-panel" onclick="closePanel()">✕ Close</button>
+    <div id="detail-content">
+      <p style="color:#475569;">Select a candidate to view details.</p>
+    </div>
+  </div>
+  <div id="panel-overlay" onclick="closePanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:499;backdrop-filter:blur(4px);"></div>
+
+  <script src="app.js"></script>
+  <script>
+    /* ============ AUTH CHECK ============ */
+    const _u = JSON.parse(localStorage.getItem('hiredUpUser') || 'null');
+    if (!_u || (_u.role !== 'Recruiter' && _u.role !== 'RECRUITER')) {
+      alert('Access denied. Recruiter login required.');
+      window.location.href = 'auth.html';
+    }
+
+    /* ============ GLOBALS ============ */
+    const API = 'http://127.0.0.1:5000';
+    let allRankings = [];
+    let scoreChart = null;
+    let candidateStatuses = JSON.parse(localStorage.getItem('candidateStatuses') || '{}');
+
+    /* ============ INIT ============ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // NAV
+      if (_u.fullName || _u.fullname) {
+        document.getElementById('nav-name').textContent = (_u.fullName || _u.fullname).toUpperCase();
+      }
+      if (_u.companyName) {
+        document.getElementById('nav-company').textContent = _u.companyName.toUpperCase();
+      }
+
+      initChart();
+      loadDashboard();
+    });
+
+    /* ============ SAFE FETCH ============ */
+    async function apiFetch(path, opts = {}) {
+      const token = localStorage.getItem('hiredUpToken') || (_u && _u.accessToken) || '';
+      const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...opts.headers };
+      try {
+        return await fetch(API + path, { ...opts, headers });
+      } catch {
+        return await fetch(API.replace('127.0.0.1','localhost') + path, { ...opts, headers });
+      }
+    }
+
+    /* ============ CHART INIT ============ */
+    function initChart() {
+      const ctx = document.getElementById('scoreChart').getContext('2d');
+      scoreChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['0-20','21-40','41-60','61-80','81-100'],
+          datasets: [{
+            label: 'Candidates',
+            data: [0,0,0,0,0],
+            backgroundColor: ['rgba(239,68,68,0.7)','rgba(245,158,11,0.7)','rgba(245,158,11,0.5)','rgba(16,185,129,0.6)','rgba(79,70,229,0.8)'],
+            borderRadius: 6, borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#475569', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#475569', font: { size: 10 }, stepSize: 1 }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function updateChart(rankings) {
+      const buckets = [0,0,0,0,0];
+      rankings.forEach(r => {
+        const s = r.totalScore || 0;
+        if (s <= 20) buckets[0]++;
+        else if (s <= 40) buckets[1]++;
+        else if (s <= 60) buckets[2]++;
+        else if (s <= 80) buckets[3]++;
+        else buckets[4]++;
+      });
+      scoreChart.data.datasets[0].data = buckets;
+      scoreChart.update('active');
+    }
+
+    /* ============ LOAD DASHBOARD ============ */
+    async function loadDashboard() {
+      try {
+        const [jobsRes, candsRes] = await Promise.all([
+          apiFetch('/api/jobs'),
+          apiFetch('/api/auth/candidates').catch(() => ({ json: async () => [] }))
+        ]);
+
+        const jobs = jobsRes.ok ? await jobsRes.json() : [];
+        const cands = candsRes.ok ? await candsRes.json() : [];
+
+        document.getElementById('stat-jobs').textContent = jobs.length;
+        document.getElementById('stat-cands').textContent = cands.length;
+
+        // Populate job selector
+        const sel = document.getElementById('job-selector');
+        jobs.forEach(j => {
+          const opt = document.createElement('option');
+          opt.value = j.id;
+          opt.textContent = j.title;
+          sel.appendChild(opt);
         });
 
-        async function safeFetch(url, options) {
-            try { return await fetch(url, options); }
-            catch (e) { return await fetch(url.replace('localhost', '127.0.0.1'), options); }
+        // Render jobs grid
+        renderJobsGrid(jobs);
+
+        // Auto-load first job's rankings
+        if (jobs.length > 0) {
+          sel.value = jobs[0].id;
+          await loadRankings();
         }
 
-        async function loadJobs() {
-            const grid = document.getElementById('jobs-grid');
-            try {
-                const res = await safeFetch('http://localhost:5000/api/jobs');
-                const jobs = await res.json();
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+        showToast('Could not connect to backend. Is it running on port 5000?', 'error');
+      }
+    }
 
-                if (jobs.length > 0) {
-                    grid.innerHTML = '';
-                    document.getElementById('stats-jobs').textContent = jobs.length;
+    /* ============ RANKINGS ============ */
+    async function loadRankings() {
+      const jobId = document.getElementById('job-selector').value;
+      if (!jobId) return;
 
-                    jobs.forEach((job, idx) => {
-                        const card = document.createElement('div');
-                        card.className = 'glass-card mission-card animate-in';
-                        card.style.animationDelay = `${idx * 0.15}s`;
-                        card.innerHTML = `
-                            <div>
-                                <div class="mission-header">
-                                    <div class="badge-live">Mission Active</div>
-                                    <div style="font-size: 0.7rem; font-family: 'JetBrains Mono'; font-weight: 700; opacity: 0.3;">
-                                        ${new Date(job.createdAt).getTime().toString(16).toUpperCase()}
-                                    </div>
-                                </div>
-                                <h3 class="mission-title mb-5">${job.title}</h3>
-                                <p class="text-sm opacity-60 mb-10" style="line-height: 1.8;">${job.description.substring(0, 160)}...</p>
-                                <div class="flex gap-3 mb-10 flex-wrap">
-                                    ${job.techStack.map(t => `<span class="tech-tag">${t}</span>`).join('')}
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center pt-8" style="border-top: 1px solid var(--glass-border);">
-                                <div class="flex items-center gap-6">
-                                    <div>
-                                        <div class="font-black text-2xl">0</div>
-                                        <div class="text-[0.6rem] font-black opacity-30 tracking-widest uppercase">Apps</div>
-                                    </div>
-                                    <div>
-                                        <div class="font-black text-2xl">${job.challenges ? job.challenges.length : 0}</div>
-                                        <div class="text-[0.6rem] font-black opacity-30 tracking-widest uppercase">Trials</div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-outline px-10" style="border-radius: 12px; font-weight: 800; border-width: 2px;">MANAGE</button>
-                            </div>
-                        `;
-                        grid.appendChild(card);
-                    });
-                } else {
-                    grid.innerHTML = '<div class="glass-card p-24 text-center col-span-2 border-dashed"><p class="text-2xl font-black opacity-20 mb-8">NO ACTIVE MISSIONS IN SECTOR</p><a href="post-job.html" class="btn btn-glow-elite">INITIALIZE MISSION</a></div>';
-                }
-            } catch (err) {
-                grid.innerHTML = '<div class="glass-card p-12 text-center border-danger col-span-2"><p class="text-danger font-black">API_CONNECTION_STALLED</p><p class="text-xs opacity-40 mt-3 font-bold">Ensure Backend Server is running on Port 5000.</p></div>';
-            }
-        }
+      const tbody = document.getElementById('rankings-body');
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:#475569;"><div style="display:inline-block;width:28px;height:28px;border:3px solid rgba(255,255,255,0.1);border-top-color:#4f46e5;border-radius:50%;animation:spin 1s linear infinite;"></div><p style="margin-top:1rem;font-size:0.85rem;">Computing AI rankings...</p></td></tr>`;
 
-        async function loadCandidates() {
-            const table = document.getElementById('candidates-table');
-            try {
-                // Fetch basic candidate info from main backend
-                const candRes = await safeFetch('http://localhost:5000/api/auth/candidates');
-                const registeredCandidates = await candRes.json();
+      try {
+        const res = await apiFetch(`/api/scoring/rankings/${jobId}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        allRankings = data.rankings || [];
 
-                // Fetch aptitude results from live-code backend
-                const resultsRes = await safeFetch('http://localhost:5001/api/aptitude/results');
-                const aptitudeResults = await resultsRes.json();
+        renderRankings(allRankings);
+        updateChart(allRankings);
+        updateStats(allRankings);
+        updatePipeline();
 
-                // Fetch coding submissions
-                const subRes = await safeFetch('http://localhost:5001/api/submissions');
-                const submissions = await subRes.json();
+      } catch (err) {
+        // Fallback: fetch candidates and show with local scores
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#f59e0b;font-size:0.85rem;">Rankings API not reachable. Showing registered candidates.</td></tr>`;
+        console.error('Rankings error:', err);
+      }
+    }
 
-                if (registeredCandidates.length > 0) {
-                    table.innerHTML = '';
-                    document.getElementById('stats-candidates').textContent = registeredCandidates.length;
-                    document.getElementById('stats-evals').textContent = aptitudeResults.length + submissions.length;
-                    
-                    // Display general performance trend
-                    const avgScore = aptitudeResults.length 
-                        ? Math.round(aptitudeResults.reduce((acc, r) => acc + r.score, 0) / aptitudeResults.length)
-                        : 0;
-                    document.getElementById('stats-score').textContent = `${avgScore || 92}%`;
+    function refreshRankings() { loadRankings(); showToast('Rankings refreshed', 'success'); }
 
-                    registeredCandidates.forEach((cand, idx) => {
-                        // Find this candidate's best aptitude score
-                        const candResults = aptitudeResults.filter(r => r.userId === cand._id);
-                        const bestAptitude = candResults.length > 0 
-                            ? Math.max(...candResults.map(r => r.score)) 
-                            : Math.floor(Math.random() * 20) + 60; // Slightly lower fallback if no data
+    function renderRankings(rankings) {
+      const tbody = document.getElementById('rankings-body');
+      if (!rankings.length) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:3rem;color:#475569;">No candidates have completed assessments for this job yet.</td></tr>`;
+        return;
+      }
 
-                        const speed = (Math.random() * 0.5 + 0.1).toFixed(2);
-                        const row = document.createElement('tr');
-                        row.className = 'elite-row animate-in';
-                        row.style.animationDelay = `${0.5 + (idx * 0.1)}s`;
-                        
-                        const statusText = candResults.length > 0 ? "Validation Success" : "Awaiting Verification";
-                        const statusColor = candResults.length > 0 ? "text-success" : "text-yellow-500 opacity-60";
+      const medals = ['🥇','🥈','🥉'];
+      tbody.innerHTML = rankings.map((r, i) => {
+        const score = r.totalScore || 0;
+        const scoreCls = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+        const key = `${r.candidateId}-${document.getElementById('job-selector').value}`;
+        const status = candidateStatuses[key] || 'reviewing';
+        const initials = (r.fullName || r.email || '?').charAt(0).toUpperCase();
 
-                        row.innerHTML = `
-                            <td>
-                                <div class="flex items-center gap-5">
-                                    <div style="width: 44px; height: 44px; background: rgba(79, 70, 229, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--primary-neon); border: 1px solid rgba(79, 70, 229, 0.2);">
-                                        ${cand.fullname.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div class="font-black tracking-tight" style="font-size: 1.1rem;">${cand.fullname.toUpperCase()}</div>
-                                        <div class="text-[0.6rem] font-black ${statusColor} tracking-widest uppercase">${statusText}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="font-bold opacity-60">${cand.expertise || 'Generalist Mission'}</td>
-                            <td>
-                                <div class="flex items-center gap-5">
-                                    <div class="benchmark-bar"><div class="benchmark-fill" style="width: ${bestAptitude}%;"></div></div>
-                                    <span class="text-gradient font-black" style="font-size: 1.25rem;">${bestAptitude}</span>
-                                </div>
-                            </td>
-                            <td class="font-mono font-bold text-primary">${speed}ms</td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-sm btn-primary btn-glow px-8" style="background: rgba(79, 70, 229, 0.15); color: #fff; border: 1px solid var(--primary-neon); font-weight: 900; border-radius: 12px;" onclick="unlockDetails('${cand.fullname}')">DEPLOY HIRE</button>
-                            </td>
-                        `;
-                        table.appendChild(row);
-                    });
-                } else if (submissions.length > 0) {
-                    // ... (existing submissions fallback)
-                    // Fallback to submissions if no registered candidates found
-                    table.innerHTML = '';
-                    submissions.forEach((sub, idx) => {
-                        const score = Math.floor(Math.random() * 10) + 90;
-                        const speed = (Math.random() * 0.5 + 0.1).toFixed(2);
-                        const row = document.createElement('tr');
-                        row.className = 'elite-row animate-in';
-                        row.style.animationDelay = `${0.5 + (idx * 0.1)}s`;
-                        row.innerHTML = `
-                            <td>
-                                <div class="flex items-center gap-5">
-                                    <div style="width: 44px; height: 44px; background: rgba(79, 70, 229, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--primary-neon); border: 1px solid rgba(79, 70, 229, 0.2);">
-                                        #${sub._id.slice(-2).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div class="font-black tracking-tight" style="font-size: 1.1rem;">AGENT_${sub._id.slice(-5).toUpperCase()}</div>
-                                        <div class="text-[0.6rem] font-black text-success tracking-widest opacity-80 uppercase">Validation Success</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="font-bold opacity-60">Fullstack Mission</td>
-                            <td>
-                                <div class="flex items-center gap-5">
-                                    <div class="benchmark-bar"><div class="benchmark-fill" style="width: ${score}%;"></div></div>
-                                    <span class="text-gradient font-black" style="font-size: 1.25rem;">${score}</span>
-                                </div>
-                            </td>
-                            <td class="font-mono font-bold text-primary">${speed}ms</td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-sm btn-primary btn-glow px-8" style="background: rgba(79, 70, 229, 0.15); color: #fff; border: 1px solid var(--primary-neon); font-weight: 900; border-radius: 12px;" onclick="unlockDetails('Candidate')">DEPLOY HIRE</button>
-                            </td>
-                        `;
-                        table.appendChild(row);
-                    });
-                } else {
-                    table.innerHTML = '<tr><td colspan="5" style="padding: 8rem; text-align: center;"><div class="opacity-10 mb-6"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></div><p class="font-black opacity-20 text-xl tracking-widest">AWAITING ELITE INFILTRATIONS</p></td></tr>';
-                }
-            } catch (err) { console.error(err); }
-        }
+        return `<tr class="elite-row" onclick="openPanel('${r.candidateId}', ${i})" id="row-${r.candidateId}">
+          <td><span class="rank-medal">${medals[i] || `#${i+1}`}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <div class="avatar-sq">${initials}</div>
+              <div>
+                <div style="font-weight:800;font-size:0.95rem;">${r.fullName || 'Anonymous'}</div>
+                <div style="font-size:0.7rem;opacity:0.4;font-family:monospace;">${r.email || ''}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="score-pill ${scoreCls}">${score.toFixed(1)}</span></td>
+          <td>
+            <div class="mini-bar"><div class="mini-bar-fill" style="width:${score}%"></div></div>
+          </td>
+          <td><span style="color:#34d399;font-weight:700;">✅ ×${r.certificatesVerified || 0}</span></td>
+          <td onclick="event.stopPropagation()">
+            <select class="status-sel" onchange="updateStatus('${r.candidateId}', this.value)">
+              <option value="reviewing"  ${status==='reviewing'  ?'selected':''}>Reviewing</option>
+              <option value="shortlisted"${status==='shortlisted'?'selected':''}>Shortlisted</option>
+              <option value="rejected"   ${status==='rejected'   ?'selected':''}>Rejected</option>
+              <option value="hired"      ${status==='hired'      ?'selected':''}>Hired</option>
+            </select>
+          </td>
+          <td><span style="font-size:0.75rem;opacity:0.4;cursor:pointer;">View ›</span></td>
+        </tr>`;
+      }).join('');
+    }
 
-        function unlockDetails(name) {
-            alert(`🔓 ACCESS AUTHORIZED\n\nDecrypting contact credentials for the selected target...\nEstablishing direct encrypted link.`);
-        }
-    </script>
+    /* ============ CANDIDATE DETAIL PANEL ============ */
+    function openPanel(candidateId, rankIndex) {
+      const r = allRankings[rankIndex];
+      if (!r) return;
+
+      const score = r.totalScore || 0;
+      const bd = r.breakdown || {};
+      const key = `${candidateId}-${document.getElementById('job-selector').value}`;
+      const status = candidateStatuses[key] || 'reviewing';
+
+      const breakdownRows = [
+        { label: 'Assessment',   val: bd.assessment_score?.value || 0,   w: bd.assessment_score?.weight || 0.35 },
+        { label: 'Coding',       val: bd.coding_score?.value || 0,       w: bd.coding_score?.weight || 0.25 },
+        { label: 'Certificates', val: bd.certificate_trust?.value || 0,  w: bd.certificate_trust?.weight || 0.20 },
+        { label: 'Learning',     val: bd.learning_aptitude?.value || 0,  w: bd.learning_aptitude?.weight || 0.10 },
+        { label: 'Skill Match',  val: bd.skill_relevance?.value || 0,    w: bd.skill_relevance?.weight || 0.10 },
+      ];
+
+      const colorFn = v => v >= 70 ? 'green' : v >= 40 ? 'amber' : 'red';
+      const initials = (r.fullName || '?').charAt(0).toUpperCase();
+
+      document.getElementById('detail-content').innerHTML = `
+        <div style="text-align:center;margin-bottom:2rem;">
+          <div style="width:72px;height:72px;background:linear-gradient(135deg,#4f46e5,#06b6d4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;margin:0 auto 1rem;">${initials}</div>
+          <div style="font-size:1.3rem;font-weight:800;">${r.fullName || 'Candidate'}</div>
+          <div style="font-size:0.8rem;opacity:0.4;margin-top:4px;font-family:monospace;">${r.email || ''}</div>
+          <div style="font-size:2rem;font-weight:900;margin-top:1rem;background:linear-gradient(90deg,#4f46e5,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">${score.toFixed(1)}<span style="font-size:1rem;-webkit-text-fill-color:#475569;">/100</span></div>
+          <div style="font-size:0.7rem;opacity:0.4;text-transform:uppercase;letter-spacing:2px;">Credibility Score</div>
+        </div>
+
+        <div style="margin-bottom:2rem;">
+          <div style="font-size:0.75rem;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase;margin-bottom:1rem;">Score Breakdown</div>
+          <div class="score-breakdown">
+            ${breakdownRows.map(row => `
+              <div class="score-row">
+                <div class="score-row-label">${row.label}</div>
+                <div class="score-bar-track"><div class="score-bar-fill ${colorFn(row.val)}" style="width:${Math.min(100,row.val)}%"></div></div>
+                <div class="score-row-val">${row.val.toFixed(0)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <div style="font-size:0.75rem;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase;margin-bottom:0.75rem;">Ranking Justification</div>
+          <p style="font-size:0.85rem;color:#94a3b8;line-height:1.7;background:rgba(255,255,255,0.03);padding:1rem;border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+            ${r.justification || 'Score computed from assessment performance, coding quality, certificate trust, learning aptitude, and skill relevance.'}
+          </p>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <div style="font-size:0.75rem;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase;margin-bottom:0.75rem;">Verified Certs</div>
+          <div style="font-size:1.5rem;font-weight:900;color:#34d399;">✅ ×${r.certificatesVerified || 0}</div>
+        </div>
+
+        <div style="margin-bottom:2rem;">
+          <div style="font-size:0.75rem;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase;margin-bottom:0.75rem;">Update Status</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+            ${['reviewing','shortlisted','rejected','hired'].map(s => `
+              <button onclick="updateStatus('${candidateId}','${s}')" style="padding:0.6rem;border-radius:8px;font-weight:700;font-size:0.78rem;cursor:pointer;border:1px solid;transition:all 0.2s;
+                background:${s===status ? (s==='shortlisted'?'rgba(16,185,129,0.25)':s==='rejected'?'rgba(239,68,68,0.25)':s==='hired'?'rgba(108,99,255,0.25)':'rgba(245,158,11,0.25)'):'rgba(255,255,255,0.04)'};
+                color:${s==='shortlisted'?'#34d399':s==='rejected'?'#f87171':s==='hired'?'#a5b4fc':'#fbbf24'};
+                border-color:${s==='shortlisted'?'rgba(16,185,129,0.3)':s==='rejected'?'rgba(239,68,68,0.3)':s==='hired'?'rgba(108,99,255,0.3)':'rgba(245,158,11,0.3)'};">
+                ${s.charAt(0).toUpperCase()+s.slice(1)}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <a href="skillgap.html?candidateId=${candidateId}&jobId=${document.getElementById('job-selector').value}" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.9rem;border-radius:12px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:#67e8f9;text-decoration:none;font-weight:700;font-size:0.85rem;margin-bottom:0.75rem;">
+          📊 View Skill Gap Analysis
+        </a>
+      `;
+
+      document.getElementById('detail-panel').classList.add('open');
+      document.getElementById('panel-overlay').style.display = 'block';
+
+      // highlight row
+      document.querySelectorAll('.elite-row').forEach(r => r.classList.remove('selected'));
+      const row = document.getElementById(`row-${candidateId}`);
+      if (row) row.classList.add('selected');
+    }
+
+    function closePanel() {
+      document.getElementById('detail-panel').classList.remove('open');
+      document.getElementById('panel-overlay').style.display = 'none';
+      document.querySelectorAll('.elite-row').forEach(r => r.classList.remove('selected'));
+    }
+
+    /* ============ STATUS UPDATE ============ */
+    function updateStatus(candidateId, status) {
+      const jobId = document.getElementById('job-selector').value;
+      const key = `${candidateId}-${jobId}`;
+      candidateStatuses[key] = status;
+      localStorage.setItem('candidateStatuses', JSON.stringify(candidateStatuses));
+      updatePipeline();
+      showToast(`Status updated to "${status}"`, 'success');
+      // Refresh row selects
+      document.querySelectorAll(`[onchange*="${candidateId}"]`).forEach(sel => sel.value = status);
+    }
+
+    function updatePipeline() {
+      const jobId = document.getElementById('job-selector').value;
+      const counts = { reviewing:0, shortlisted:0, rejected:0, hired:0 };
+      allRankings.forEach(r => {
+        const key = `${r.candidateId}-${jobId}`;
+        const s = candidateStatuses[key] || 'reviewing';
+        counts[s] = (counts[s]||0) + 1;
+      });
+      document.getElementById('pipe-reviewing').textContent   = counts.reviewing;
+      document.getElementById('pipe-shortlisted').textContent = counts.shortlisted;
+      document.getElementById('pipe-rejected').textContent    = counts.rejected;
+      document.getElementById('pipe-hired').textContent       = counts.hired;
+    }
+
+    /* ============ STATS UPDATE ============ */
+    function updateStats(rankings) {
+      document.getElementById('stat-evals').textContent = rankings.length;
+      if (rankings.length) {
+        const avg = rankings.reduce((s,r) => s + (r.totalScore||0), 0) / rankings.length;
+        document.getElementById('stat-avg').textContent = avg.toFixed(1);
+      }
+    }
+
+    /* ============ JOBS GRID ============ */
+    function renderJobsGrid(jobs) {
+      const grid = document.getElementById('jobs-grid');
+      if (!jobs.length) {
+        grid.innerHTML = `<div class="g-card" style="padding:3rem;text-align:center;border-style:dashed;opacity:0.5;"><p>No jobs posted yet.</p><a href="post-job.html" class="btn-glow" style="margin-top:1rem;display:inline-flex;">Post First Job</a></div>`;
+        return;
+      }
+      grid.innerHTML = jobs.map((j, idx) => `
+        <div class="g-card ani" style="padding:1.75rem;animation-delay:${0.35+idx*0.08}s;cursor:pointer;" onclick="document.getElementById('job-selector').value='${j.id}';loadRankings();">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+            <span class="badge-live">Active</span>
+            <span style="font-size:0.65rem;font-family:monospace;opacity:0.3;">${j.id?.slice(-6).toUpperCase()}</span>
+          </div>
+          <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.5rem;letter-spacing:-0.3px;">${j.title}</h3>
+          <p style="font-size:0.82rem;opacity:0.5;line-height:1.6;margin-bottom:1rem;">${(j.description||'').substring(0,100)}${j.description?.length>100?'...':''}</p>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem;">
+            ${(j.skills_required||j.techStack||[]).slice(0,4).map(s => `<span class="skill-tag">${s}</span>`).join('')}
+          </div>
+          <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:1rem;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.72rem;opacity:0.4;">${new Date(j.created_at||j.createdAt||Date.now()).toLocaleDateString()}</span>
+            <span style="font-size:0.8rem;font-weight:700;color:#a5b4fc;">View Rankings →</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ============ CSV EXPORT ============ */
+    function exportCSV() {
+      if (!allRankings.length) { showToast('No ranking data to export', 'error'); return; }
+      const jobId = document.getElementById('job-selector').value;
+      const headers = ['Rank','Name','Email','Credibility Score','Assessment','Coding','Certificates','Learning','Skill Match','Certs Verified','Status'];
+      const rows = allRankings.map((r, i) => {
+        const bd = r.breakdown || {};
+        const key = `${r.candidateId}-${jobId}`;
+        return [
+          i+1, r.fullName||'', r.email||'',
+          (r.totalScore||0).toFixed(1),
+          (bd.assessment_score?.value||0).toFixed(1),
+          (bd.coding_score?.value||0).toFixed(1),
+          (bd.certificate_trust?.value||0).toFixed(1),
+          (bd.learning_aptitude?.value||0).toFixed(1),
+          (bd.skill_relevance?.value||0).toFixed(1),
+          r.certificatesVerified||0,
+          candidateStatuses[key]||'reviewing'
+        ].join(',');
+      });
+      const csv = [headers.join(','), ...rows].join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = `hiredup-rankings-${jobId?.slice(-6)||'export'}-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      showToast('CSV exported successfully', 'success');
+    }
+  </script>
 </body>
-
 </html>

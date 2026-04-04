@@ -13,10 +13,21 @@
     --text-primary: #eff1f6f2;
     --text-secondary: #8a8a8e;
   }
+  
+  :root[data-theme="light"] {
+    --leetcode-dark-bg: #f9fafb;
+    --leetcode-dark-layer: #ffffff;
+    --leetcode-dark-border: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+  }
 
   body {
-    @apply bg-[#1a1a1a] text-[#eff1f6f2] antialiased selection:bg-blue-500/30;
+    background-color: var(--leetcode-dark-bg);
+    color: var(--text-primary);
+    @apply antialiased selection:bg-blue-500/30;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   code,
@@ -29,7 +40,9 @@
 
   /* LeetCode Card Style */
   .lc-card {
-    @apply bg-[#282828] border border-[#3e3e3e] rounded-lg shadow-sm;
+    background-color: var(--leetcode-dark-layer);
+    border-color: var(--leetcode-dark-border);
+    @apply border rounded-lg shadow-sm transition-colors duration-300;
   }
 
   /* Difficulty Badges */
@@ -51,7 +64,7 @@
   }
 
   .btn-lc-primary {
-    @apply bg-[#3a3a3a] text-white hover:bg-[#4a4a4a] border border-[#4a4a4a];
+    @apply bg-[var(--leetcode-dark-layer)] text-[var(--text-primary)] hover:opacity-80 border border-[var(--leetcode-dark-border)];
   }
 
   .btn-lc-green {
@@ -68,11 +81,11 @@
   }
 
   .nav-pill-active {
-    @apply bg-[#3a3a3a] text-white;
+    @apply bg-[var(--leetcode-dark-layer)] text-[var(--text-primary)] border border-[var(--leetcode-dark-border)];
   }
 
   .nav-pill-inactive {
-    @apply text-[#8a8a8e] hover:text-white hover:bg-[#282828];
+    @apply text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--leetcode-dark-border)];
   }
 }
 
@@ -83,7 +96,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-[#1a1a1a];
+  @apply bg-[var(--leetcode-dark-bg)];
 }
 
 ::-webkit-scrollbar-thumb {
