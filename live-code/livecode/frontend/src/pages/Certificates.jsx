@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import { API_BASE_URL } from '../config/api';
 
 const Certificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -158,7 +159,7 @@ const Certificates = () => {
                                                 <span className="text-xs font-mono text-gray-300">{cert.trustScore}%</span>
                                             </div>
                                             <a 
-                                                href={`http://localhost:5001${cert.filePath}`} 
+                                                href={`${API_BASE_URL}${cert.filePath}`} 
                                                 target="_blank" 
                                                 rel="noreferrer"
                                                 className="text-[10px] font-bold text-gray-400 hover:text-white transition-colors"
