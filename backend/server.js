@@ -14,6 +14,10 @@ const takeRoutes = require('./routes/take');
 const certificatesRoutes = require('./routes/certificates');
 const scoringRoutes = require('./routes/scoring');
 const performanceRoutes = require('./routes/performance');
+const problemRoutes = require('./routes/problems');
+const aptitudeRoutes = require('./routes/aptitude');
+const codeExecRoutes = require('./routes/codeExec');
+const submissionRoutes = require('./routes/submissions');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,7 +43,7 @@ app.get('/api', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Hired-Up API',
-    endpoints: ['/api/auth', '/api/jobs', '/api/assessments', '/api/take', '/api/certificates', '/api/scoring', '/api/performance', '/api/health'],
+    endpoints: ['/api/auth', '/api/jobs', '/api/assessments', '/api/take', '/api/certificates', '/api/scoring', '/api/performance', '/api/problems', '/api/aptitude', '/api/execute', '/api/submissions', '/api/health'],
   });
 });
 
@@ -58,6 +62,18 @@ app.use('/api/scoring', scoringRoutes);
 console.log('✅ Route loaded: /api/scoring');
 app.use('/api/performance', performanceRoutes);
 console.log('✅ Route loaded: /api/performance');
+
+app.use('/api/problems', problemRoutes);
+console.log('✅ Route loaded: /api/problems');
+
+app.use('/api/aptitude', aptitudeRoutes);
+console.log('✅ Route loaded: /api/aptitude');
+
+app.use('/api/execute', codeExecRoutes);
+console.log('✅ Route loaded: /api/execute');
+
+app.use('/api/submissions', submissionRoutes);
+console.log('✅ Route loaded: /api/submissions');
 
 // Health check
 app.get('/api/health', (req, res) => {
