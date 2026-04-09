@@ -1,3 +1,8 @@
+const problemRoutes = require('./routes/problems');
+const aptitudeRoutes = require('./routes/aptitude');
+const codeExecRoutes = require('./routes/codeExec');
+const submissionRoutes = require('./routes/submissions');
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -64,6 +69,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'hired-up-api' });
 });
 console.log('✅ Route loaded: /api/health');
+app.use('/api/problems', problemRoutes);
+console.log("Route loaded: /api/problems");
+
+app.use('/api/aptitude', aptitudeRoutes);
+console.log("Route loaded: /api/aptitude");
+
+app.use('/api/execute', codeExecRoutes);
+console.log("Route loaded: /api/execute");
+
+app.use('/api/submissions', submissionRoutes);
+console.log("Route loaded: /api/submissions");
 
 // 404 handler for unmatched routes (MUST be after all route definitions)
 app.use((req, res) => {
