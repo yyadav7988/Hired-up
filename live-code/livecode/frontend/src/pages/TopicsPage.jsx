@@ -122,7 +122,7 @@ const TopicsPage = () => {
     // Build topic map: tag -> problems[]
     const topicMap = {};
     problems.forEach(p => {
-        p.tags.forEach(tag => {
+        (p.tags || []).forEach(tag => {
             if (tag === 'DSA') return; // DSA is a category umbrella, skip as a standalone section
             if (!topicMap[tag]) topicMap[tag] = [];
             topicMap[tag].push(p);
@@ -130,7 +130,7 @@ const TopicsPage = () => {
     });
 
     // Also add DSA as a grouped section for problems tagged DSA with no other specific tag
-    const dsaProblems = problems.filter(p => p.tags.includes('DSA'));
+    const dsaProblems = problems.filter(p => (p.tags || []).includes('DSA'));
     if (dsaProblems.length > 0 && !topicMap['DSA']) {
         topicMap['DSA'] = dsaProblems;
     }

@@ -39,6 +39,7 @@ const AptitudeTest = () => {
     }, [topic]);
 
     const handleAnswerSubmission = async () => {
+        if (!questions[currentIndex]) return;
         const isCorrect = selectedOption === questions[currentIndex].correctAnswer;
         let newCorrect = results.correct;
         let newWrong = results.wrong;
@@ -164,7 +165,7 @@ const AptitudeTest = () => {
                     </h2>
 
                     <div className="space-y-4">
-                        {currentQuestion.options.map((option, idx) => (
+                        {(currentQuestion.options || []).map((option, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setSelectedOption(idx)}
