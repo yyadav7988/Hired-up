@@ -79,12 +79,12 @@ const AptitudeCategories = () => {
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-black text-white tracking-tight">{cat.category}</h2>
-                                    <p className="text-gray-400 text-sm mt-1">{cat.topics.length} specialized topics available</p>
+                                    <p className="text-gray-400 text-sm mt-1">{(cat.topics || []).length} specialized topics available</p>
                                 </div>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {cat.topics.map((topic) => (
+                                {(cat.topics || []).map((topic) => (
                                     <button
                                         key={topic.name}
                                         onClick={() => navigate('/aptitude-test', { state: { topic: topic.name, category: cat.category } })}

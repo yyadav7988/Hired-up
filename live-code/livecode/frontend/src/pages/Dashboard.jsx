@@ -63,7 +63,7 @@ const Dashboard = () => {
     const tags = ['All', 'DSA', 'Arrays', 'Strings', 'Linked List', 'Tree', 'Stack', 'Frontend', 'Backend'];
     const filteredProblems = selectedTag === 'All'
         ? problems
-        : problems.filter(p => p.tags.includes(selectedTag));
+        : problems.filter(p => (p.tags || []).includes(selectedTag));
 
     if (loading) return (
         <div className="min-h-screen bg-[var(--leetcode-dark-bg)] bg-[#1a1a1a] flex items-center justify-center">
@@ -183,7 +183,7 @@ const Dashboard = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex gap-2">
-                                                {problem.tags.slice(0, 2).map(tag => (
+                                                {(problem.tags || []).slice(0, 2).map(tag => (
                                                     <span key={tag} className="text-[var(--text-secondary)] bg-[var(--leetcode-dark-border)] px-2 py-0.5 rounded text-[11px] font-medium">
                                                         {tag}
                                                     </span>
